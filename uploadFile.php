@@ -49,8 +49,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $fileType = $_FILES['uploadedFile']['type'];
             // Move the uploaded file to the destination directory
             if (move_uploaded_file($file['tmp_name'], $uploadedFile)) {
-                // File upload successful
-                $upload_success = "File uploaded successfully.";
+               
                 // Create a database connection and insert the new upload file record into the database
                 include('connect.php');
                 $sql_insert_file = "INSERT INTO files (username, userfile, filetype) VALUES (?, ?, ?)";
@@ -59,6 +58,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 mysqli_stmt_execute($stmt_insert_file);
                 // Close the connection
                 mysqli_close($conn);
+                 // Set a flash message
+                 session_start();
+                 $_SESSION['upload_success'] = "File uploaded successfully.";
+ 
+                 // Redirect to the same page (uploadFile.php)
+                 header("Location: uploadFile.php");
+                 exit; // Ensure the script stops executing after the redirect
+
             } else {
                 // File upload failed
                 $upload_err = "File upload failed. Please try again later.";
@@ -69,6 +76,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $file_err = "Please upload your file.";
     }
 }
+session_start();
+$upload_success = isset($_SESSION['upload_success']) ? $_SESSION['upload_success'] : "";
 ?>
 
 <!DOCTYPE html>
@@ -155,15 +164,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 <?php echo $upload_err; ?>
                             </div>
                             <?php } ?>
-                            <?php if (!empty($upload_success)) { ?>
+                           <!-- Display the flash message if it exists -->
+                           <?php if (isset($_SESSION['upload_success'])) { ?>
                             <div class="alert alert-success mt-3" role="alert">
-                                <?php echo $upload_success; ?>
+                                <?php echo $_SESSION['upload_success']; ?>
                             </div>
-                            <!-- Clear the username field after a successful file upload -->
-                            <script>
-                                document.getElementById('username').value = '';
-                            </script>
-                            <?php } ?>
+                            <?php unset($_SESSION['upload_success']); }  ?>
+                            </div>
                         </form>
                     </div>
                 </div>
